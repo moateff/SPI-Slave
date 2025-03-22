@@ -37,33 +37,31 @@ module RAM #(
 
     reg [WORD_SIZE - 1:0] mem [0:MEM_DEPTH - 1];
 
-    reg [ADDR_SIZE - 1:0] wr_addr;
-    reg [ADDR_SIZE - 1:0] rd_addr;
+    reg [ADDR_SIZE - 1:0] addr;
 
     always @(posedge clk) begin
         if (~rst_n) begin
-            wr_addr  <= {ADDR_SIZE{1'b0}};
-            rd_addr  <= {ADDR_SIZE{1'b0}};
             tx_valid <= 1'b0;
-            dout     <= {WORD_SIZE{1'b0}};
+            dout <= {WORD_SIZE{1'b0}};            
+            addr <= {ADDR_SIZE{1'b0}};
         end else begin
             if (rx_valid) begin
                 case (din[WORD_SIZE + 1:WORD_SIZE])
                     2'b00: begin
                         tx_valid <= 1'b0;
-                        wr_addr <= din[WORD_SIZE-1:0];
+                        addr <= din[WORD_SIZE-1:0];
                     end
                     2'b01: begin
                         tx_valid <= 1'b0;
-                        mem[wr_addr] <= din[WORD_SIZE - 1:0];
+                        mem[addr] <= din[WORD_SIZE - 1:0];
                     end
                     2'b10: begin
                         tx_valid <= 1'b0;
-                        rd_addr <= din[WORD_SIZE - 1:0];
+                        addr <= din[WORD_SIZE - 1:0];
                     end
                     2'b11: begin
                         tx_valid <= 1'b1;
-                        dout <= mem[rd_addr];
+                        dout <= mem[addr];
                     end
                 endcase
             end
