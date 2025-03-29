@@ -1,9 +1,9 @@
 `timescale 1ns / 1ps
 
 module SPI_Slave_tb;
-    integer TEST_CASES  = 10;
-    integer pass_count  = 0;
-    integer error_count = 0;
+    int TEST_CASES  = 10;
+    int pass_count  = 0;
+    int error_count = 0;
     
     parameter CLK_PERIOD = 10;
     
@@ -12,8 +12,8 @@ module SPI_Slave_tb;
     parameter FRAME_WIDTH = 8;
     
     localparam CTRL_WIDTH  = 3; 
-    localparam TX_FRAME_WIDTH = FRAME_WIDTH;
-    localparam RX_FRAME_WIDTH = FRAME_WIDTH + CTRL_WIDTH;
+    localparam RX_FRAME_WIDTH = FRAME_WIDTH;
+    localparam TX_FRAME_WIDTH = FRAME_WIDTH + CTRL_WIDTH;
            
     logic clk; 
     logic rst_n; 
@@ -42,13 +42,12 @@ module SPI_Slave_tb;
     always #(CLK_PERIOD/2) clk = ~clk;
     
     task parallel_to_serial;
-        input [RX_FRAME_WIDTH - 1:0] bus_data;
+        input [TX_FRAME_WIDTH - 1:0] bus_data;
         begin
             $display("Starting Parallel-to-Serial Conversion. Input Data: %b", bus_data);
-            @(negedge clk); 
-            for (int i = 0; i < RX_FRAME_WIDTH; i++) begin
-                MOSI = bus_data[RX_FRAME_WIDTH - 1 - i]; // Sending MSB first
-                $display("Bit %0d/%0d -> MOSI: %b", i + 1, RX_FRAME_WIDTH, MOSI);
+            for (int i = 0; i < TX_FRAME_WIDTH; i++) begin
+                MOSI = bus_data[TX_FRAME_WIDTH - 1 - i]; // Sending MSB first
+                $display("Bit %0d/%0d -> MOSI: %b", i + 1, TX_FRAME_WIDTH, MOSI);
                 @(negedge clk);
             end
             $display("Parallel-to-Serial Conversion Completed.");
@@ -57,15 +56,14 @@ module SPI_Slave_tb;
 
     
     task serial_to_parallel;
-        output [TX_FRAME_WIDTH - 1:0] bus_data;
+        output [RX_FRAME_WIDTH - 1:0] bus_data;
         begin
             bus_data = 0;
             $display("Starting Serial-to-Parallel Conversion...");
-            @(negedge clk); 
-            for (int i = 0; i < TX_FRAME_WIDTH; i++) begin
+            for (int i = 0; i < RX_FRAME_WIDTH; i++) begin
+                bus_data[RX_FRAME_WIDTH - 1 - i] = MISO; // Storing MSB first
+                $display("Bit %0d/%0d Received -> MISO: %b", i + 1, RX_FRAME_WIDTH, MISO);
                 @(negedge clk);
-                bus_data[TX_FRAME_WIDTH - 1 - i] = MISO; // Storing MSB first
-                $display("Bit %0d/%0d Received -> MISO: %b", i + 1, TX_FRAME_WIDTH, MISO);
             end
             $display("Serial-to-Parallel Conversion Completed. Output Data: %b", bus_data);
         end
@@ -91,12 +89,14 @@ module SPI_Slave_tb;
     task assert_slave_select;
         begin
             SS_n = 0;
+            wait_cycles(1);
         end
     endtask
     
     task deassert_slave_select;
         begin
             SS_n = 1;
+            wait_cycles(1);
         end
     endtask
     
@@ -114,14 +114,21 @@ module SPI_Slave_tb;
     endtask
 
     task master_rx;
+        input [CTRL_WIDTH  - 1:0] ctrl_bits;
+        input [FRAME_WIDTH - 1:0] tx_data;
         output [FRAME_WIDTH - 1:0] rx_data;
         begin
             $display("Master RX Started.");
             assert_slave_select;
-            $display("Slave Select Asserted. Receiving Data...");
+            $display("Slave Select Asserted.");
+            $display("Initiating Read Data Request. Control Bits: %b, Data: %b", ctrl_bits, tx_data);
+            parallel_to_serial({ctrl_bits, tx_data});
+            wait_cycles(2);
+            $display("Receiving Data...");
             serial_to_parallel(rx_data);
             deassert_slave_select;
-            $display("Slave Select Deasserted. Master RX Completed. Received Data: %b", rx_data);
+            $display("Slave Select Deasserted. Master RX Completed.");
+            $display("Received Data: %b", rx_data);
         end
     endtask
     
@@ -149,11 +156,8 @@ module SPI_Slave_tb;
                 end
                 "read_data": begin
                     $display("Master Operation: Receiving Read DATA");
-                    $display("Initiating Read Data Request");
                     ctrl_bits = 3'b111;
-                    master_tx(ctrl_bits, tx_data);  // Garbage value sent
-                    master_rx(rx_data);
-                    $display("Received Data: %b", rx_data);
+                    master_rx(ctrl_bits, tx_data, rx_data); // tx_data: Garbage value sent
                 end
                 default: begin
                     $display("ERROR: Invalid operation '%s'", operation);
@@ -161,7 +165,6 @@ module SPI_Slave_tb;
                 end
             endcase
             $display("");
-            wait_cycles(1);
         end
     endtask
     
@@ -175,7 +178,7 @@ module SPI_Slave_tb;
             expected_data = DUT.ram_inst.mem[addr];
     
             if (expected_data === recieved_data) begin
-                $display("[Data Match: Addr = %d, Expected = %d, Received = %d", 
+                $display("Data Match: Addr = %d, Expected = %d, Received = %d", 
                           addr, expected_data, recieved_data);
                 pass_count++;
             end else begin
@@ -202,7 +205,7 @@ module SPI_Slave_tb;
             // Generate random values for transactions
             master_tx_addr = $random;
             master_tx_data = $random;
-            master_rx_addr = $random; 
+            master_rx_addr = master_tx_addr; 
     
             // Perform SPI transactions
             master("write_addr", master_tx_addr, master_rx_data);
@@ -217,7 +220,7 @@ module SPI_Slave_tb;
         wait_cycles(1);
         $display("\n-----------------------------------------------------------------------\n");
         $display("Simulation Completed: %0d test cases excuted.", TEST_CASES);
-        $display("Test Summary:Passed: %0d, Failed: %0d", pass_count, error_count);
+        $display("Test Summary: Passed: %0d, Failed: %0d", pass_count, error_count);
            
         $stop;
     end
