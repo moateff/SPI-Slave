@@ -141,22 +141,22 @@ module SPI_Slave #(
             end
             READ_DATA:
             begin
-                if (tx_valid) begin
-                    if (read_addr) begin
-                        MISO <= tx_data[TX_FRAME_WIDTH - 1 - counter];
-                        if (counter == TX_FRAME_WIDTH - 1) begin 
-                            read_addr <= 1'b0;
-                            counter   <= {COUNT_WIDTH{1'b0}};
-                        end else begin
-                            counter <= counter + 1;
-                        end
-                    end
-                end else begin
+                if (~tx_valid) begin
                     if (~rx_valid) begin
                         rx_data <= {rx_data[RX_FRAME_WIDTH - 2:0], MOSI};
                         if (counter == RX_FRAME_WIDTH - 1) begin
                             rx_valid <= 1'b1;
                             counter  <= {COUNT_WIDTH{1'b0}};
+                        end else begin
+                            counter <= counter + 1;
+                        end
+                    end
+                end else begin
+                    if (read_addr) begin
+                        MISO <= tx_data[TX_FRAME_WIDTH - 1 - counter];
+                        if (counter == TX_FRAME_WIDTH - 1) begin 
+                            read_addr <= 1'b0;
+                            counter   <= {COUNT_WIDTH{1'b0}};
                         end else begin
                             counter <= counter + 1;
                         end

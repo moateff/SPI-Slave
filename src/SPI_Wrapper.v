@@ -27,10 +27,12 @@ module SPI_Wrapper #(
     ) spi_slave_inst (
         .clk(clk), 
         .rst_n(rst_n), 
+        
         .rx_valid(rx_valid),
         .rx_data(rx_data),
         .tx_valid(tx_valid),
         .tx_data(tx_data),
+        
         .SS_n(SS_n),
         .MOSI(MOSI),
         .MISO(MISO)
@@ -43,6 +45,7 @@ module SPI_Wrapper #(
     ) ram_inst (
         .clk(clk), 
         .rst_n(rst_n), 
+        
         .rx_valid(rx_valid),
         .din(rx_data),
         .tx_valid(tx_valid),
