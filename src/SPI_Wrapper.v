@@ -12,12 +12,15 @@ module SPI_Wrapper #(
     input  wire MOSI,
     output wire MISO
 );
+    localparam CTRL_WIDTH  = 2;
+    localparam TX_FRAME_WIDTH = FRAME_WIDTH;
+    localparam RX_FRAME_WIDTH = FRAME_WIDTH + CTRL_WIDTH;
     
     wire rx_valid;
-    wire [FRAME_WIDTH + 1:0] rx_data;
+    wire [RX_FRAME_WIDTH - 1:0] rx_data;
     
     wire tx_valid;
-    wire [FRAME_WIDTH - 1:0] tx_data;
+    wire [TX_FRAME_WIDTH - 1:0] tx_data;
     
     SPI_Slave #(
         .FRAME_WIDTH(FRAME_WIDTH)
