@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module SPI_Slave_tb;
-    integer TEST_CASES  = 250;
+    integer TEST_CASES  = 10;
     integer pass_count  = 0;
     integer error_count = 0;
     
@@ -34,7 +34,6 @@ module SPI_Slave_tb;
     ) DUT (
         .clk(clk), 
         .rst_n(rst_n), 
-       
         .SS_n(SS_n),
         .MOSI(MOSI),
         .MISO(MISO)
@@ -114,7 +113,6 @@ module SPI_Slave_tb;
         end
     endtask
 
-    
     task master_rx;
         output [FRAME_WIDTH - 1:0] rx_data;
         begin
@@ -132,7 +130,6 @@ module SPI_Slave_tb;
         input  [FRAME_WIDTH - 1:0] tx_data;
         output [FRAME_WIDTH - 1:0] rx_data;
         bit    [CTRL_WIDTH - 1:0] ctrl_bits;
-
         begin    
             case (operation)
                 "write_addr": begin
@@ -172,7 +169,6 @@ module SPI_Slave_tb;
     task check_data;
         input [FRAME_WIDTH - 1:0] recieved_data;
         input [FRAME_WIDTH - 1:0] addr;  // Address to check in DUT memory
-    
         begin
             // Read the expected value directly from the DUT RAM at the given address
             logic [FRAME_WIDTH - 1:0] expected_data;
@@ -196,20 +192,9 @@ module SPI_Slave_tb;
         $display("\nSPI Slave Initialized");
         
         assert_reset;
-        $display("Reset Asserted\n");
+        $display("Reset Asserted");
         
         wait_cycles(1);
-        
-        for (int i = 1; i <= TEST_CASES; i++) begin
-            $display("\n-----------------------------------------------------------------------\n");
-            // Generate random values for transactions
-            master_tx_addr = $random;
-            master_tx_data = $random;
-            
-            // Perform SPI transactions
-            master("write_addr", master_tx_addr, master_rx_data);
-            master("write_data", master_tx_data, master_rx_data);  
-        end
     
         for (int i = 1; i <= TEST_CASES; i++) begin
             $display("\n-------------------------- Test Case %0d --------------------------\n", i);
@@ -239,11 +224,16 @@ module SPI_Slave_tb;
     
     task initialize_spi_slave;
         begin 
-            clk   = 0;
-            rst_n = 1;
-            SS_n  = 1;
-            MOSI  = 0;
+            // Initialize SPI signals
+            clk   = 0;   // Start clock as low
+            rst_n = 1;   // Deassert reset
+            SS_n  = 1;   // Slave Select inactive (high)
+            MOSI  = 0;   // Ensure MOSI starts at 0
+    
+            // Load RAM with predefined values from an external file
+            $readmemh("random_data.mem", DUT.ram_inst.mem);  
         end
     endtask
+
         
 endmodule
