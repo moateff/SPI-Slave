@@ -41,6 +41,13 @@ module SPI_Slave_tb;
         
     always #(CLK_PERIOD/2) clk = ~clk;
     
+    task wait_cycles;
+        input integer num_cycles;
+        begin
+            repeat(num_cycles) @(negedge clk);
+        end
+    endtask
+        
     task parallel_to_serial;
         input [TX_FRAME_WIDTH - 1:0] bus_data;
         begin
@@ -48,7 +55,7 @@ module SPI_Slave_tb;
             for (int i = 0; i < TX_FRAME_WIDTH; i++) begin
                 MOSI = bus_data[TX_FRAME_WIDTH - 1 - i]; // Sending MSB first
                 $display("Bit %0d/%0d -> MOSI: %b", i + 1, TX_FRAME_WIDTH, MOSI);
-                @(negedge clk);
+                wait_cycles(1);
             end
             $display("Parallel-to-Serial Conversion Completed.");
         end
@@ -63,23 +70,15 @@ module SPI_Slave_tb;
             for (int i = 0; i < RX_FRAME_WIDTH; i++) begin
                 bus_data[RX_FRAME_WIDTH - 1 - i] = MISO; // Storing MSB first
                 $display("Bit %0d/%0d Received -> MISO: %b", i + 1, RX_FRAME_WIDTH, MISO);
-                @(negedge clk);
+                wait_cycles(1);
             end
             $display("Serial-to-Parallel Conversion Completed. Output Data: %b", bus_data);
-        end
-    endtask
-
-            
-    task wait_cycles;
-        input integer num_cycles;
-        begin
-            repeat(num_cycles) @(negedge clk);
         end
     endtask
     
     task assert_reset;
         begin
-            @(negedge clk);
+            wait_cycles(1);
             rst_n = 0;
             wait_cycles(1);
             rst_n = 1;
