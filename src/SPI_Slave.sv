@@ -1,24 +1,4 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 03/24/2025 05:07:57 AM
-// Design Name: 
-// Module Name: SPI_Slave
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
 
 module SPI_Slave #(
     parameter  FRAME_WIDTH = 8,
@@ -45,7 +25,7 @@ module SPI_Slave #(
     reg read_addr;
     
     (* fsm_encoding = "gray" *)
-    typedef enum {IDLE, CHK_CMD, WRITE, READ_ADD, READ_DATA} state_t;
+    typedef enum logic [2:0] {IDLE, CHK_CMD, WRITE, READ_ADD, READ_DATA} state_t;
     
     state_t state_nxt, state_crnt;
     
