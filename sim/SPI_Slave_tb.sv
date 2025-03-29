@@ -128,7 +128,7 @@ module SPI_Slave_tb;
             serial_to_parallel(rx_data);
             deassert_slave_select;
             $display("Slave Select Deasserted. Master RX Completed.");
-            $display("Received Data: %b", rx_data);
+            $display("Received Data: %d", rx_data);
         end
     endtask
     
@@ -140,17 +140,17 @@ module SPI_Slave_tb;
         begin    
             case (operation)
                 "write_addr": begin
-                    $display("Master Operation: Transmitting Write Address");
+                    $display("Master Operation: Transmitting Write Address: %d", tx_data);
                     ctrl_bits = 3'b000;
                     master_tx(ctrl_bits, tx_data);
                 end
                 "write_data": begin
-                    $display("Master Operation: Transmitting Write Data");
+                    $display("Master Operation: Transmitting Write Data: %d", tx_data);
                     ctrl_bits = 3'b001;
                     master_tx(ctrl_bits, tx_data);
                 end
                 "read_addr": begin
-                    $display("Master Operation: Transmitting Read Address");
+                    $display("Master Operation: Transmitting Read Address: %d", tx_data);
                     ctrl_bits = 3'b110;
                     master_tx(ctrl_bits, tx_data);
                 end
@@ -211,7 +211,7 @@ module SPI_Slave_tb;
             master("write_addr", master_tx_addr, master_rx_data);
             master("write_data", master_tx_data, master_rx_data);        
             master("read_addr", master_rx_addr, master_rx_data);
-            master("read_data", $random, master_rx_data);  // Garbage value for read data request
+            master("read_data", {TX_FRAME_WIDTH{1'bx}}, master_rx_data);  // Garbage value for read data request
     
             // Check if received data matches written data
             check_data(master_rx_data, master_rx_addr);
