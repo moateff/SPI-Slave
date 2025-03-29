@@ -116,9 +116,9 @@ module SPI_Slave #(
             WRITE:
             begin
                 if (~rx_valid) begin
-                    rx_data <= {rx_data[FRAME_WIDTH:0], MOSI};
-                    if (counter == FRAME_WIDTH + 1) begin
-                        rx_valid  <= 1;
+                    rx_data <= {rx_data[RX_FRAME_WIDTH - 2:0], MOSI};
+                    if (counter == RX_FRAME_WIDTH - 1) begin
+                        rx_valid  <= 1'b1;
                         read_addr <= 1'b0;
                         counter   <= {COUNT_WIDTH{1'b0}};
                     end else begin
@@ -129,10 +129,10 @@ module SPI_Slave #(
             READ_ADD:
             begin
                 if (~rx_valid) begin
-                    rx_data <= {rx_data[FRAME_WIDTH:0], MOSI};
-                    if (counter == FRAME_WIDTH + 1) begin
-                        rx_valid  <= 1;
-                        read_addr <= 1;
+                    rx_data <= {rx_data[RX_FRAME_WIDTH - 2:0], MOSI};
+                    if (counter == RX_FRAME_WIDTH - 1) begin
+                        rx_valid  <= 1'b1;
+                        read_addr <= 1'b1;
                         counter   <= {COUNT_WIDTH{1'b0}};
                     end else begin
                         counter <= counter + 1;
@@ -143,9 +143,9 @@ module SPI_Slave #(
             begin
                 if (tx_valid) begin
                     if (read_addr) begin
-                        MISO <= tx_data[FRAME_WIDTH - 1 - counter];
-                        if (counter == FRAME_WIDTH - 1) begin 
-                            read_addr <= 0;
+                        MISO <= tx_data[TX_FRAME_WIDTH - 1 - counter];
+                        if (counter == TX_FRAME_WIDTH - 1) begin 
+                            read_addr <= 1'b0;
                             counter   <= {COUNT_WIDTH{1'b0}};
                         end else begin
                             counter <= counter + 1;
@@ -153,9 +153,9 @@ module SPI_Slave #(
                     end
                 end else begin
                     if (~rx_valid) begin
-                        rx_data <= {rx_data[FRAME_WIDTH:0], MOSI};
-                        if (counter == FRAME_WIDTH + 1) begin
-                            rx_valid <= 1;
+                        rx_data <= {rx_data[RX_FRAME_WIDTH - 2:0], MOSI};
+                        if (counter == RX_FRAME_WIDTH - 1) begin
+                            rx_valid <= 1'b1;
                             counter  <= {COUNT_WIDTH{1'b0}};
                         end else begin
                             counter <= counter + 1;
