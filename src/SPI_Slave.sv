@@ -1,10 +1,10 @@
 `timescale 1ns / 1ps
 
 module SPI_Slave #(
-    parameter  FRAME_WIDTH = 8,
-    localparam CTRL_WIDTH  = 2,
-    localparam TX_FRAME_WIDTH = FRAME_WIDTH,
-    localparam RX_FRAME_WIDTH = FRAME_WIDTH + CTRL_WIDTH
+    parameter FRAME_WIDTH = 8,
+    parameter CTRL_WIDTH  = 2,
+    parameter TX_FRAME_WIDTH = FRAME_WIDTH,
+    parameter RX_FRAME_WIDTH = FRAME_WIDTH + CTRL_WIDTH
 ) (
     input wire clk, 
     input wire rst_n, 
